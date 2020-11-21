@@ -1,0 +1,7 @@
+streamlit==0.69.2
+pandas==1.0.3
+numpy==1.19.1
+xgboost==1.2.0
+matplotlib==3.3.1
+altair==4.1.0
+sklearn==0.0
