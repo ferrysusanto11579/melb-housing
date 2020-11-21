@@ -61,6 +61,7 @@ if st.checkbox('Simulation overview (sidebar)'):
 
 st.write('## Input Data & Pre-trained Model')
 
+## Load raw data
 @st.cache(persist=True)
 def load_data():
 	df = pd.read_csv('./input/df.csv')
@@ -86,11 +87,12 @@ df_suburb = df[['Suburb','Suburb_avg']].drop_duplicates()
 df_type = df[['Type','Type_string']].drop_duplicates()
 df_type['Type_int'] = df_type['Type'].map({'u':0, 't':1, 'h':2})
 
+## Toggle raw data
 if st.checkbox('Raw data'):
 	excludes_columns = ['Date_int','Type_int','Suburb_avg','Type_string']
 	st.write(df[[c for c in df if c not in excludes_columns]].head(200))
 
-
+## Load pre-trained xgboost model from pickle
 model = pickle.load(open('./input/model_xgboost.pkl','rb'))
 if st.checkbox('Model'):
 	st.write(model)
@@ -109,13 +111,18 @@ mostTransSuburbs = get_suburb_with_most_transactions(N=2)
 
 st.sidebar.write('# Simulaton (Forecast)')
 
+## By default, we estimate the date as of latest date in the data
 pDate = df['Date'].max()
 st.sidebar.write('As of Date: %s'%(df['Date'].max()))
+
+## Suburb to analyse
 pSuburb = st.sidebar.selectbox(
 	'Suburb'
 	, df['Suburb'].sort_values().unique().tolist()
 	, index = df['Suburb'].sort_values().unique().tolist().index('Richmond')
 )
+
+## The rest of the parameter values will be defaulted to the values based on the selected Suburb above
 tmp_df_suburb = df[df['Suburb']==pSuburb]
 pType = st.sidebar.radio(
 	'Type'
@@ -153,6 +160,8 @@ pCar = st.sidebar.slider(
 	, min_value = int(np.percentile(tmp_df_suburb['Car'],  1))
 	, max_value = int(np.percentile(tmp_df_suburb['Car'], 99))
 )
+
+## The submit button
 st.sidebar.write('----------')
 BT_SIM_SUBMIT = st.sidebar.button('Submit')
 
@@ -215,7 +224,7 @@ if st.checkbox('Click to show/hide visualisations'):
 	chart_row2_col2 = alt.vconcat(bar_room, bar_bathr)
 	chart_row2_col2 = alt.vconcat(chart_row2_col2, bar_car)
 	chart_row2 = alt.hconcat(scat_size, chart_row2_col2)
-	## Combine
+	## Combine charts
 	charts = chart_row1
 	charts = alt.vconcat(charts, chart_row2)
 	charts = charts.configure_legend(orient='top')
@@ -229,6 +238,7 @@ st.write('## Simulation')
 
 if BT_SIM_SUBMIT:
 
+	## Generate input data points for prediction based on the parameter give in the sidebar
 	p_Date = [pDate]
 	ndata = len(p_Date)
 	p_Landsize = [pLandsize] * ndata
@@ -246,6 +256,8 @@ if BT_SIM_SUBMIT:
 	SIM_DATA = pd.merge(SIM_DATA, df_date, how='left', on='Date')
 	SIM_DATA = pd.merge(SIM_DATA, df_type, how='left', on='Type_string')
 	SIM_DATA = pd.merge(SIM_DATA, df_suburb, how='left', on='Suburb')
+
+	## Perform the prediction
 	SIM_DATA['(Predict)'] = model.predict(SIM_DATA[mtx_features].values).round(0)
 	SIM_DATA['Date'] = SIM_DATA['Date'].apply(lambda x: x.strftime('%Y-%m-%d'))
 
