@@ -32,6 +32,7 @@ if st.checkbox('Objective'):
 if st.checkbox('Technical overview'):
 	st.write('''
 			* Data source: [Melbourne Housing Market](https://www.kaggle.com/anthonypino/melbourne-housing-market)
+			* Exploratory data analysis notebook: [link](https://github.com/ferrysusanto11579/melb-housing/blob/main/notebook/Melbourne%20Housing%20Market%20-%20EDA.ipynb)
 			* Import raw data
 			* Data cleaning, missing data imputations, feature engineering
 			* ML modelling (xgboost)
